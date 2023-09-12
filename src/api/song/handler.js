@@ -1,123 +1,75 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
-const { nanoid } = require('nanoid');
-const songs = require('./song');
+class SongsHandler {
+    constructor(service, validator) {
+        this._service = service;
+        this._validator = validator;
+    }
 
-const addSongHandler = (request, h) => {
-    const { title = 'untitled', year, performer, genre, duration, albumId } = request.payload;
+    async postSongHandler(request, h) {
+        this._validator.validateSongPayload(request.payload);
+        const { title, year, performer, genre, duration, albumId } = request.payload;
 
-    const id = nanoid(16);
+        // eslint-disable-next-line max-len
+        const songId = await this._service.addSong({ title, year, performer, genre, duration, albumId });
 
-    const newSong = {
-        id, title, year, performer, genre, duration, albumId,
-    };
-
-    songs.push(newSong);
-
-    const isSuccess = songs.filter((song) => song.id === id).length > 0;
-
-    if (isSuccess) {
         const response = h.response({
             status: 'success',
-            message: 'song berhasil ditambahkan',
+            message: 'Song berhasil ditambahkan',
+            data: {
+                songId,
+            },
         });
         response.code(201);
         return response;
     }
 
-    const response = h.response({
-        status: 'fail',
-        message: 'song gagal ditambahkan',
-    });
-    response.code(500);
-    return response;
-};
-
-const getAllSongsHandler = () => ({
-    status: 'success',
-    data: {
-        songs,
-    },
-});
-
-const getSongByIdHandler = (request, h) => {
-    const { id } = request.params;
-
-    const song = songs.filter((n) => n.id === id)[0];
-
-    if (song !== undefined) {
+    async getSongsHandler() {
+        const songs = await this._service.getSongs();
         return {
             status: 'success',
             data: {
-                song: songs,
+                songs,
             },
         };
     }
 
-    const response = h.response({
-        status: 'fail',
-        message: 'album gagal ditambahkan',
-    });
-    response.code(404);
-    return response;
-};
+    // eslint-disable-next-line no-unused-vars
+    async getSongByIdHandler(request, h) {
+        const { id } = request.params;
 
-const editSongByIdHandler = (request, h) => {
-    const { id } = request.params;
-
-    const { name, year } = request.payload;
-
-    const index = songs.findIndex((song) => song.id === id);
-
-    if (index !== -1) {
-        songs[index] = {
-            ...songs[index],
-            name,
-            year,
+        const song = await this._service.getSongById(id);
+        return {
+            status: 'success',
+            data: {
+                song,
+            },
         };
-
-        const response = h.response({
-            status: 'success',
-            message: 'album berhasil diperbaharui',
-        });
-        response.code(200);
-        return response;
     }
 
-    const response = h.response({
-        status: 'success',
-        message: 'album gagal diperbaharui',
-    });
-    response.code(404);
-    return response;
-};
+    // eslint-disable-next-line no-unused-vars
+    async putSongByIdHandler(request, h) {
+        this._validator.validateSongPayload(request.payload);
 
-const deleteSongByIdHandler = (request, h) => {
-    const { id } = request.params;
+        const { id } = request.params;
 
-    const index = songs.findIndex((song) => song.id === id);
+        await this._service.editSongById(id, request.payload);
 
-    if (index !== -1) {
-        songs.splice(index, 1);
-        const response = h.response({
+        return {
             status: 'success',
-            message: 'album berhasil dihapus',
-        });
-        response.code(200);
-        return response;
+            message: 'Song berhasil diperbaharui',
+        };
     }
 
-    const response = h.response({
-        status: 'fail',
-        message: 'catatan gagal dihapus',
-    });
-    response.code(404);
-    return response;
-};
+    // eslint-disable-next-line no-unused-vars
+    async deleteSongByIdHandler(request, h) {
+        const { id } = request.params;
 
-module.exports = {
-    addSongHandler,
-    getAllSongsHandler,
-    getSongByIdHandler,
-    editSongByIdHandler,
-    deleteSongByIdHandler,
-};
+        await this._service.deleteSongById(id);
+
+        return {
+            status: 'success',
+            message: 'Song berhasil dihapus',
+        };
+    }
+}
+
+module.exports = SongsHandler;

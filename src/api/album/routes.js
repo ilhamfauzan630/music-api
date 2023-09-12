@@ -1,29 +1,23 @@
-const {
-    addAlbumHandler,
-    getAlbumByIdHandler,
-    editAlbumByIdHandler,
-    deleteAlbumByIdHandler,
-} = require('./handler');
-
-const routes = [{
+const routes = (handler) => [
+    {
         method: 'POST',
-        path: '/album',
-        handler: addAlbumHandler,
+        path: '/albums',
+        handler: (request, h) => handler.postAlbumHandler(request, h),
     },
     {
         method: 'GET',
-        path: '/album{id}',
-        handler: getAlbumByIdHandler,
+        path: '/albums/{id}',
+        handler: (request, h) => handler.getAlbumByIdHandler(request, h),
     },
     {
         method: 'PUT',
-        path: '/album{id}',
-        handler: editAlbumByIdHandler,
+        path: '/albums/{id}',
+        handler: (request, h) => handler.putAlbumByIdHandler(request, h),
     },
     {
         method: 'DELETE',
-        path: '/album{id}',
-        handler: deleteAlbumByIdHandler,
+        path: '/albums/{id}',
+        handler: (request, h) => handler.deleteAlbumByIdHandler(request, h),
     },
 ];
 

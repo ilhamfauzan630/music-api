@@ -1,62 +1,62 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
-const { nanoid } = require('nanoid');
-
-class AlbumService {
-    constructor(validator) {
-        this._albums = [];
+class AlbumsHandler {
+    constructor(service, validator) {
+        this._service = service;
         this._validator = validator;
     }
 
-    addAlbumHandler({ name, year }) {
-        const id = nanoid(16);
+    async postAlbumHandler(request, h) {
+            this._validator.validateAlbumPayload(request.payload);
+            const { name, year } = request.payload;
 
-        const newAlbum = {
-            id, name, year,
+            const albumId = await this._service.addAlbum({ name, year });
+
+            const response = h.response({
+                status: 'success',
+                message: 'Album berhasil ditambahkan',
+                data: {
+                    albumId,
+                },
+            });
+            response.code(201);
+            return response;
+    }
+
+    // eslint-disable-next-line no-unused-vars
+    async getAlbumByIdHandler(request, h) {
+            const { id } = request.params;
+            const album = await this._service.getAlbumById(id);
+            return {
+                status: 'success',
+                data: {
+                    album,
+                },
+            };
+    }
+
+    // eslint-disable-next-line no-unused-vars
+    async putAlbumByIdHandler(request, h) {
+            this._validator.validateAlbumPayload(request.payload);
+            const { id } = request.params;
+
+            await this._service.editAlbumById(id, request.payload);
+
+            return {
+                status: 'success',
+                message: 'Album berhasil diperbaharui',
+            };
+    }
+
+    // eslint-disable-next-line no-unused-vars
+    async deleteAlbumByIdHandler(request, h) {
+        const { id } = request.params;
+
+        await this._service.deleteAlbumById(id);
+
+        return {
+            status: 'success',
+            message: 'Album berhasil dihapus',
         };
-
-        this._albums.push(newAlbum);
-
-        const isSuccess = this._albums.filter((album) => album.id === id).length > 0;
-
-        if (!isSuccess) {
-            throw new Error('album gagal ditambahkan');
-        }
-
-        return id;
-    }
-
-    getAlbumByIdHandler(id) {
-        const album = this._albums.filter((a) => a.id === id)[0];
-
-        if (!album) {
-            throw new Error('catatan tidak ditemukan');
-        }
-        return album;
-    }
-
-    editAlbumByIdHandler(id, { name, year }) {
-        const index = this._albums.findIndex((a) => a.id === id);
-
-        if (index !== -1) {
-            throw new Error('gagal memperbaharui album. id tidak ditemukan');
-        }
-
-        this._albums[index] = {
-            ...this._albums[index],
-            name,
-            year,
-        };
-    }
-
-    deleteAlbumByIdHandler() {
-        const index = this._albums.findIndex((a) => a.id === 'id');
-
-        if (index !== 0) {
-            throw new Error('gagal menghapus album. id tidak ditemukan');
-        }
-
-        this._albums.splice(index, 1);
     }
 }
 
-module.exports = { AlbumService };
+module.exports = AlbumsHandler;

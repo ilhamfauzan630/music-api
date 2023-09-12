@@ -1,35 +1,28 @@
-const {
-    addSongHandler,
-    getAllSongsHandler,
-    getSongByIdHandler,
-    editSongByIdHandler,
-    deleteSongByIdHandler,
-} = require('./handler');
-
-const routes = [{
+const routes = (handler) => [
+    {
         method: 'POST',
-        path: '/song',
-        handler: addSongHandler,
+        path: '/songs',
+        handler: (request, h) => handler.postSongHandler(request, h),
     },
     {
         method: 'GET',
-        path: '/song',
-        handler: getAllSongsHandler,
+        path: '/songs',
+        handler: () => handler.getSongsHandler(),
     },
     {
         method: 'GET',
-        path: '/song{id}',
-        handler: getSongByIdHandler,
+        path: '/songs/{id}',
+        handler: (request, h) => handler.getSongByIdHandler(request, h),
     },
     {
         method: 'PUT',
-        path: '/song{id}',
-        handler: editSongByIdHandler,
+        path: '/songs/{id}',
+        handler: (request, h) => handler.putSongByIdHandler(request, h),
     },
     {
         method: 'DELETE',
-        path: '/song{id}',
-        handler: deleteSongByIdHandler,
+        path: '/songs/{id}',
+        handler: (request, h) => handler.deleteSongByIdHandler(request, h),
     },
 ];
 
