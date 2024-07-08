@@ -22,8 +22,11 @@ class SongsHandler {
         return response;
     }
 
-    async getSongsHandler() {
-        const songs = await this._service.getSongs();
+    // eslint-disable-next-line no-unused-vars
+    async getSongsHandler(request, h) {
+        const { title = null, performer = null } = request.query;
+
+        const songs = await this._service.getSongs(title, performer);
         return {
             status: 'success',
             data: {
@@ -41,6 +44,19 @@ class SongsHandler {
             status: 'success',
             data: {
                 song,
+            },
+        };
+    }
+
+    // eslint-disable-next-line no-unused-vars
+    async getSongByTitleHandler(request, h) {
+        const { title = '' } = request.query;
+
+        const songs = await this._service.getSongByTitle(title);
+        return {
+            status: 'success',
+            data: {
+                songs,
             },
         };
     }

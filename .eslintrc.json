@@ -13,6 +13,7 @@
         "linebreak-style": "off",
         "indent":"off",
         "object-curly-newline": "off",
-        "no-underscore-dangle": "off"
+        "no-underscore-dangle": "off",
+        "quotes": [2, "single", { "avoidEscape": true }]    
     }
 }

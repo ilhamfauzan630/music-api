@@ -26,8 +26,32 @@ class SongService {
         return result.rows[0].id;
     }
 
-    async getSongs() {
-        const result = await this._pool.query('SELECT id, title, performer FROM songs');
+    async getSongs(title, performer) {
+        let text = 'SELECT id, title, performer FROM songs';
+        const values = [];
+
+        if (title) {
+            text += " WHERE title ILIKE '%' || $1 || '%'";
+            values.push(title);
+        }
+
+        if (!title && performer) {
+            text += " WHERE performer ILIKE '%' || $1 || '%'";
+            values.push(performer);
+        }
+
+        if (title && performer) {
+            text += " AND performer ILIKE '%' || $2 || '%'";
+            values.push(performer);
+        }
+
+        const query = {
+            text,
+            values,
+        };
+
+        const result = await this._pool.query(query);
+
         return result.rows.map(mapDBToModelSong);
     }
 
@@ -44,6 +68,16 @@ class SongService {
         }
 
         return result.rows.map(mapDBToModelSong)[0];
+    }
+
+    async getSongByTitle(title) {
+        const query = {
+            text: 'SELECT * FROM songs WHERE title = $1',
+            values: [title],
+        };
+
+        const result = await this._pool.query(query);
+        return result.rows.map(mapDBToModelSong);
     }
 
     async editSongById(id, { title, year, performer, genre, duration }) {
