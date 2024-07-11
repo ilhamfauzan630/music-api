@@ -11,8 +11,8 @@ class CollaborationsHandler {
         const { id: credentialId } = request.auth.credentials;
         const { playlistId, userId } = request.payload;
 
+        await this._collaborationsService.verifyUserIsExist(userId);
         await this._playlistsService.verifyPlaylistAccess(playlistId, credentialId);
-
         /* eslint max-len: ["error", { "code": 200 }] */
         const collaborationId = await this._collaborationsService.addCollaboration(playlistId, userId);
 
@@ -33,6 +33,8 @@ class CollaborationsHandler {
 
         const { id: credentialId } = request.auth.credentials;
         const { playlistId, userId } = request.payload;
+
+        await this._collaborationsService.verifyUserIsExist(userId);
 
         await this._playlistsService.verifyPlaylistAccess(playlistId, credentialId);
         await this._collaborationsService.deleteCollaboration(playlistId, userId);
