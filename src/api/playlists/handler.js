@@ -8,8 +8,9 @@ class PlaylistHandler {
         this._validator.validatePlaylistPayload(request.payload);
 
         const { name } = request.payload;
+        const { id: credentialId } = request.auth.credentials;
 
-        const playlistId = await this._service.addPlaylist(name);
+        const playlistId = await this._service.addPlaylist(name, credentialId);
 
         const response = h.response({
             status: 'success',
@@ -24,7 +25,9 @@ class PlaylistHandler {
 
     // eslint-disable-next-line no-unused-vars
     async getPlaylistsHandler(request, h) {
-        const playlists = await this._service.getPlaylists();
+        const { id: credentialId } = request.auth.credentials;
+
+        const playlists = await this._service.getPlaylists(credentialId);
 
         return {
             status: 'success',
@@ -34,14 +37,68 @@ class PlaylistHandler {
         };
     }
 
-    async deletePlaylistsHandler(request) {
+    async deletePlaylistsByIdHandler(request) {
         const { id } = request.params;
 
-        await this._service.deletePlaylist(id);
+        const { id: credentialId } = request.auth.credentials;
+
+        await this._service.verifyPlaylistOwner(id, credentialId);
+        await this._service.deletePlaylistById(id);
 
         return {
             status: 'success',
             message: 'Playlist berhasil dihapus',
+        };
+    }
+
+    async postPlaylistSongsHandler(request, h) {
+        this._validator.validatePlaylistSongsPayload(request.payload);
+
+        const { songId } = request.payload;
+        const { id } = request.params;
+        const { id: credentialId } = request.auth.credentials;
+
+        await this._service.verifyPlaylistOwner(id, credentialId);
+        await this._service.verifySongIsExist(songId);
+        await this._service.addSongToPlaylist(id, songId);
+
+        const response = h.response({
+            status: 'success',
+            message: 'Lagu berhasil ditambahkan ke playlist',
+        });
+        response.code(201);
+        return response;
+    }
+
+    // eslint-disable-next-line no-unused-vars
+    async getSongsInPlaylistHandler(request, h) {
+        const { id } = request.params;
+        const { id: credentialId } = request.auth.credentials;
+
+        await this._service.verifyPlaylistOwner(id, credentialId);
+
+        const playlist = await this._service.getSongsInPlaylist(id);
+
+        return {
+            status: 'success',
+            data: {
+                playlist,
+            },
+        };
+    }
+
+    async deleteSongInPlaylistHandler(request) {
+        const { id } = request.params;
+        const { songId } = request.payload;
+
+        const { id: credentialId } = request.auth.credentials;
+
+        await this._service.verifyPlaylistOwner(id, credentialId);
+        await this._service.deleteSongInPlaylistById(songId);
+
+        return {
+            status: 'success',
+            message: 'Lagu berhasil dihapus dari playlist',
         };
     }
 }
