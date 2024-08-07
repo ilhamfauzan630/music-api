@@ -3,12 +3,11 @@ const { nanoid } = require('nanoid');
 const InvariantError = require('../../exceptions/InvariantError');
 const NotFoundError = require('../../exceptions/NotFoundError');
 const AuthorizationError = require('../../exceptions/AuthorizationError');
-const CollaborationsService = require('./CollaborationsService');
 
 class PlaylistsService {
-    constructor() {
+    constructor(collaborationsService) {
         this._pool = new Pool();
-        this._collaborationsService = new CollaborationsService();
+        this._collaborationsService = collaborationsService;
     }
 
     async addPlaylist(name, owner) {
