@@ -3,6 +3,8 @@ require('dotenv').config();
 
 const Hapi = require('@hapi/hapi');
 const Jwt = require('@hapi/jwt');
+// eslint-disable-next-line import/no-extraneous-dependencies
+const Inert = require('@hapi/inert');
 const path = require('path');
 
 const album = require('./api/album');
@@ -67,6 +69,9 @@ const init = async () => {
     await server.register([
         {
             plugin: Jwt,
+        },
+        {
+            plugin: Inert,
         },
     ]);
 
