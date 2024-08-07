@@ -4,8 +4,9 @@ const InvariantError = require('../../exceptions/InvariantError');
 const NotFoundError = require('../../exceptions/NotFoundError');
 
 class AlbumLikesService {
-    constructor() {
+    constructor(cacheService) {
         this._pool = new Pool();
+        this._cacheService = cacheService;
     }
 
     async addLikeAlbum(albumId, userId) {
@@ -24,6 +25,8 @@ class AlbumLikesService {
         if (!result.rows.length) {
             throw new InvariantError('Gagal menambahkan like pada album');
         }
+
+        await this._cacheService.delete(`likes:${albumId}`);
 
         return result.rows[0].id;
     }
@@ -66,18 +69,33 @@ class AlbumLikesService {
     }
 
     async getLikeCount(albumId) {
-        const query = {
-            text: 'SELECT COUNT(*) FROM user_album_likes WHERE album_id = $1',
-            values: [albumId],
-        };
+        try {
+            const result = await this._cacheService.get(`likes:${albumId}`);
 
-        const result = await this._pool.query(query);
+            const parseResult = JSON.parse(result);
+            return {
+                source: 'cache',
+                likes: parseInt(parseResult, 10),
+            };
+        } catch (error) {
+            const query = {
+                text: 'SELECT COUNT(*) FROM user_album_likes WHERE album_id = $1',
+                values: [albumId],
+            };
 
-        if (!result.rows.length) {
-            throw new NotFoundError('Gagal mengambil like album');
+            const result = await this._pool.query(query);
+
+            if (!result.rows.length) {
+                throw new NotFoundError('Gagal mengambil like album');
+            }
+
+            await this._cacheService.set(`likes:${albumId}`, JSON.stringify(result.rows[0].count));
+
+            return {
+                source: 'database',
+                likes: Number(result.rows[0].count),
+            };
         }
-
-        return Number(result.rows[0].count);
     }
 
     async deleteLikeAlbum(albumId, userId) {
@@ -91,6 +109,8 @@ class AlbumLikesService {
         if (!result.rows.length) {
             throw new NotFoundError('Gagal menghapus like album');
         }
+
+        await this._cacheService.delete(`likes:${albumId}`);
     }
 }
 

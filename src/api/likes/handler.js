@@ -13,21 +13,26 @@ class AlbumLikeHandler {
             status: 'success',
             message: 'Like berhasil ditambahkan',
         });
+
         response.code(201);
         return response;
     }
 
-    async getCountAlbumLikeHandler(request) {
+    async getCountAlbumLikeHandler(request, h) {
         const { id } = request.params;
 
-        const likes = await this._service.getLikeCount(id);
+        const { source, likes } = await this._service.getLikeCount(id);
 
-        return {
+        const response = h.response({
             status: 'success',
             data: {
                 likes,
             },
-        };
+        });
+
+        response.header('X-Data-Source', source);
+
+        return response;
     }
 
     async deleteAlbumLikeHandler(request) {
